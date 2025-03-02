@@ -6,9 +6,15 @@ CREATE TABLE articles
     source_id   INT NOT NULL,
     title    VARCHAR(255) NOT NULL,
     link    VARCHAR(255) NOT NULL,
-    type_source INT(1) NOT NULL DEFAULT 0,
+    summary TEXT NOT NULL,
+    published_at TIMESTAMP NOT NULL,
+    posted_at TIMESTAMP,
     created_at  TIMESTAMP    NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMP    NOT NULL DEFAULT NOW(),
+    CONSTRAINT fk_articles_source_id
+        FOREIGN KEY (source_id)
+            REFERENCES sources (id)
+            ON DELETE CASCADE
 );
 -- +goose StatementEnd
 
