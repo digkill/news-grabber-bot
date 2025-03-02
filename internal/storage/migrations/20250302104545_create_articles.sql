@@ -5,7 +5,7 @@ CREATE TABLE articles
     id          SERIAL PRIMARY KEY,
     source_id   INT NOT NULL,
     title    VARCHAR(255) NOT NULL,
-    link    VARCHAR(255) NOT NULL,
+    link    VARCHAR(255) NOT NULL UNIQUE,
     summary TEXT NOT NULL,
     published_at TIMESTAMP NOT NULL,
     posted_at TIMESTAMP,

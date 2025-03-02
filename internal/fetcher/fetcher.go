@@ -4,11 +4,12 @@ import (
 	"context"
 	"github.com/digkill/news-grabber-bot/internal/models"
 	src "github.com/digkill/news-grabber-bot/internal/source"
-	"go.tomakado.io/containers/set"
 	"log"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/emirpasic/gods/sets/hashset"
 )
 
 //go:generate moq --out=mocks/mock_article_storage.go --pkg=mocks . ArticleStorage
@@ -126,7 +127,11 @@ func (f *Fetcher) processItems(ctx context.Context, source Source, items []model
 }
 
 func (f *Fetcher) itemShouldBeSkipped(item models.Item) bool {
-	categoriesSet := set.New(item.Categories...)
+	categoriesSet := hashset.New()
+
+	for _, category := range item.Categories {
+		categoriesSet.Add(category)
+	}
 
 	for _, keyword := range f.filterKeywords {
 		if categoriesSet.Contains(keyword) || strings.Contains(strings.ToLower(item.Title), keyword) {
