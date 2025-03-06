@@ -3,11 +3,10 @@ package bot
 import (
 	"context"
 	"fmt"
-
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-
 	"github.com/digkill/news-grabber-bot/internal/botkit"
 	"github.com/digkill/news-grabber-bot/internal/models"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 type SourceStorage interface {
