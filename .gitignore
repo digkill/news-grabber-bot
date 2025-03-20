@@ -28,5 +28,5 @@ go.work
 
 /config.local.hcl
 /bin/
-.env
+config.hcl
 .idea

@@ -63,7 +63,7 @@ func (s *ArticlePostgresStorage) AllNotPosted(ctx context.Context, since time.Ti
 				a.summary AS a_summary,
 				a.published_at AS a_published_at,
 				a.posted_at AS a_posted_at,
-				a.created_at AS a_created_at
+				a.created_at AS a_created_at,
 			a.updated_at AS a_updated_at
 			FROM articles a JOIN sources s ON s.id = a.source_id
 			WHERE a.posted_at IS NULL 

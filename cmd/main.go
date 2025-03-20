@@ -101,6 +101,12 @@ func main() {
 			bot.ViewCmdDeleteSource(sourceStorage),
 		),
 	)
+	newsBot.RegisterCmdView(
+		"start",
+		middleware.AllAccess(
+			bot.ViewCmdStart(sourceStorage),
+		),
+	)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
@@ -133,7 +139,7 @@ func main() {
 	}(ctx)
 
 	go func(ctx context.Context) {
-		if err := http.ListenAndServe("9.0.0.0:8080", mux); err != nil {
+		if err := http.ListenAndServe("0.0.0.0:8080", mux); err != nil {
 			if !errors.Is(err, context.Canceled) {
 				log.Printf("[ERROR] failed to run http server: %v", err)
 				return
