@@ -9,6 +9,7 @@ import (
 	"github.com/digkill/news-grabber-bot/internal/botkit"
 	"github.com/digkill/news-grabber-bot/internal/fetcher"
 	"github.com/digkill/news-grabber-bot/internal/notifier"
+	poster "github.com/digkill/news-grabber-bot/internal/services/poster"
 	"github.com/digkill/news-grabber-bot/internal/storage"
 	"github.com/digkill/news-grabber-bot/internal/summary"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -50,6 +51,14 @@ func main() {
 			config.Get().FetchInterval,
 			config.Get().FilterKeywords,
 		)
+
+		poster = poster.NewPoster(
+			"storage/images",
+			config.Get().NotificationInterval,
+			botAPI,
+			config.Get().TelegramChannelID,
+		)
+
 		summarizer = summary.NewOpenAISummarizer(
 			config.Get().OpenAIKey,
 			config.Get().OpenAIModel,
@@ -135,6 +144,17 @@ func main() {
 			}
 
 			log.Printf("[INFO] notifier stopped")
+		}
+	}(ctx)
+
+	go func(ctx context.Context) {
+		if err := poster.Start(ctx); err != nil {
+			if !errors.Is(err, context.Canceled) {
+				log.Printf("[ERROR] failed to run poster: %v", err)
+				return
+			}
+
+			log.Printf("[INFO] poster stopped")
 		}
 	}(ctx)
 
