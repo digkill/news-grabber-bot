@@ -3,7 +3,10 @@ package poster
 import (
 	"context"
 	"fmt"
+	"github.com/digkill/news-grabber-bot/internal/helpers"
+	"github.com/digkill/news-grabber-bot/internal/summary"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"io"
 	"log"
 	"math/rand"
 	"os"
@@ -17,6 +20,7 @@ type Poster struct {
 	postInterval time.Duration
 	bot          *tgbotapi.BotAPI
 	channelID    int64
+	openai       *summary.OpenAI
 }
 
 // Start Запуск сервиса
@@ -44,7 +48,7 @@ func (p *Poster) Posting(ctx context.Context) error {
 
 	imageDir := "./internal/storage/images"
 	var imagePaths []string
-
+	ext := ""
 	// Проходим по всем файлам в папке
 	err := filepath.Walk(imageDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -54,7 +58,7 @@ func (p *Poster) Posting(ctx context.Context) error {
 		// Проверим, файл ли это (а не папка)
 		if !info.IsDir() {
 			// Получим расширение и проверим, изображение ли это
-			ext := strings.ToLower(filepath.Ext(info.Name()))
+			ext = strings.ToLower(filepath.Ext(info.Name()))
 			if ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".gif" {
 				imagePaths = append(imagePaths, path)
 			}
@@ -109,13 +113,24 @@ func (p *Poster) Posting(ctx context.Context) error {
 		}
 		defer file.Close()
 
+		p.openai.GetClient()
+
+		// Преобразуем в []byte
+		data, err := io.ReadAll(file)
+		if err != nil {
+			fmt.Println("Ошибка чтения файла:", err)
+
+		}
+
+		imgBase64, _ := helpers.EncodeImageToBase64(data, ext)
+
 		// Создаем объект фото
 		photo := tgbotapi.NewPhoto(p.channelID, tgbotapi.FileReader{
 			Name:   img,
 			Reader: file,
 			//	Size:   -1, // можно оставить -1, если не знаем размер
 		})
-		photo.Caption = "Вот твоя пикча, Пусичек! 💖"
+		photo.Caption, _ = p.openai.SetCaption("картинка", imgBase64)
 
 		// Отправляем
 		if _, err := p.bot.Send(photo); err != nil {
@@ -174,11 +189,13 @@ func NewPoster(
 	postInterval time.Duration,
 	bot *tgbotapi.BotAPI,
 	channelID int64,
+	openai *summary.OpenAI,
 ) *Poster {
 	return &Poster{
 		pathImage:    pathImage,
 		postInterval: postInterval,
 		bot:          bot,
 		channelID:    channelID,
+		openai:       openai,
 	}
 }

@@ -52,21 +52,23 @@ func main() {
 			config.Get().FilterKeywords,
 		)
 
+		openAI = summary.NewOpenAI(
+			config.Get().OpenAIKey,
+			config.Get().OpenAIModel,
+			config.Get().OpenAIPrompt,
+		)
+
 		poster = poster.NewPoster(
 			"storage/images",
 			config.Get().NotificationInterval,
 			botAPI,
 			config.Get().TelegramChannelID,
+			openAI,
 		)
 
-		summarizer = summary.NewOpenAISummarizer(
-			config.Get().OpenAIKey,
-			config.Get().OpenAIModel,
-			config.Get().OpenAIPrompt,
-		)
 		notifier = notifier.NewNotifier(
 			articleStorage,
-			summarizer,
+			openAI,
 			botAPI,
 			config.Get().NotificationInterval,
 			2*config.Get().FetchInterval,
