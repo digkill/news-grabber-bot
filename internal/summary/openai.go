@@ -148,12 +148,6 @@ func (s *OpenAI) SetCaption(prompt string, image string) (string, error) {
 	}
 
 	rawSummary := strings.TrimSpace(resp.Choices[0].Message.Content)
-	if strings.HasSuffix(rawSummary, ".") {
-		return rawSummary, nil
-	}
 
-	// cut all after the last ".":
-	sentences := strings.Split(rawSummary, ".")
-
-	return strings.Join(sentences[:len(sentences)-1], ".") + ".", nil
+	return rawSummary, nil
 }

@@ -48,7 +48,7 @@ func (p *Poster) Posting(ctx context.Context) error {
 
 	imageDir := "./internal/storage/images"
 	var imagePaths []string
-	ext := ""
+
 	// Проходим по всем файлам в папке
 	err := filepath.Walk(imageDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -58,8 +58,8 @@ func (p *Poster) Posting(ctx context.Context) error {
 		// Проверим, файл ли это (а не папка)
 		if !info.IsDir() {
 			// Получим расширение и проверим, изображение ли это
-			ext = strings.ToLower(filepath.Ext(info.Name()))
-			if ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".gif" {
+			ext := strings.ToLower(filepath.Ext(info.Name()))
+			if ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".gif" || ext == ".mp4" {
 				imagePaths = append(imagePaths, path)
 			}
 		}
@@ -107,7 +107,7 @@ func (p *Poster) Posting(ctx context.Context) error {
 		fmt.Println("Оставшиеся картинки:", imagePaths)
 
 		// Открываем файл
-		file, err := os.Open(img)
+		file, _ := os.Open(img)
 		if err != nil {
 			log.Println("Ошибка открытия картинки:", err)
 		}
@@ -119,23 +119,37 @@ func (p *Poster) Posting(ctx context.Context) error {
 		data, err := io.ReadAll(file)
 		if err != nil {
 			fmt.Println("Ошибка чтения файла:", err)
+		}
+		file.Seek(0, io.SeekStart)
 
+		extF := strings.ToLower(filepath.Ext(file.Name()))
+		if extF == ".mp4" {
+			video := tgbotapi.NewVideo(p.channelID, tgbotapi.FileReader{
+				Name:   file.Name(),
+				Reader: file,
+			})
+
+			// Отправляем
+			if _, err = p.bot.Send(video); err != nil {
+				log.Println("Ошибка отправки фото:", err)
+			}
+		} else {
+			imgBase64, _ := helpers.EncodeImageToBase64(data, extF)
+
+			// Создаем объект фото
+			photo := tgbotapi.NewPhoto(p.channelID, tgbotapi.FileReader{
+				Name:   file.Name(),
+				Reader: file,
+			})
+			photo.Caption, _ = p.openai.SetCaption("картинка", imgBase64)
+
+			// Отправляем
+			if _, err = p.bot.Send(photo); err != nil {
+				log.Println("Ошибка отправки фото:", err)
+			}
 		}
 
-		imgBase64, _ := helpers.EncodeImageToBase64(data, ext)
-
-		// Создаем объект фото
-		photo := tgbotapi.NewPhoto(p.channelID, tgbotapi.FileReader{
-			Name:   img,
-			Reader: file,
-			//	Size:   -1, // можно оставить -1, если не знаем размер
-		})
-		photo.Caption, _ = p.openai.SetCaption("картинка", imgBase64)
-
-		// Отправляем
-		if _, err := p.bot.Send(photo); err != nil {
-			log.Println("Ошибка отправки фото:", err)
-		}
+		//	godump.Dump(photo)
 
 		err = os.Remove(img)
 		if err != nil {
@@ -143,10 +157,6 @@ func (p *Poster) Posting(ctx context.Context) error {
 		} else {
 			fmt.Println("Файл удалён успешно 🧼✨")
 		}
-
-		//	if err := p.sendPost(file); err != nil {
-		//		return err
-		//	}
 
 	} else {
 		fmt.Println("Слайс пустой 😿")
