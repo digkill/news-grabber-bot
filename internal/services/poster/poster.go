@@ -10,6 +10,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -27,10 +28,6 @@ type Poster struct {
 func (p *Poster) Start(ctx context.Context) error {
 	ticker := time.NewTicker(p.postInterval)
 	defer ticker.Stop()
-
-	//	if err := p.SelectAndSendArticle(ctx); err != nil {
-	//		return err
-	//	}
 
 	for {
 		select {
@@ -75,30 +72,6 @@ func (p *Poster) Posting(ctx context.Context) error {
 	for _, img := range imagePaths {
 		fmt.Println("-", img)
 	}
-	/*
-		imageName := "pusik.jpg" // имя файла картинки
-		imagePath := filepath.Join("images", imageName)
-
-		// Открываем файл
-		file, err := os.Open(imagePath)
-		if err != nil {
-			log.Println("Ошибка открытия картинки:", err)
-		}
-		defer file.Close()
-
-		// Создаем объект фото
-		photo := tgbotapi.NewPhoto(p.channelID, tgbotapi.FileReader{
-			Name:   imageName,
-			Reader: file,
-			//	Size:   -1, // можно оставить -1, если не знаем размер
-		})
-		photo.Caption = "Вот твоя пикча, Пусичек! 💖"
-
-		// Отправляем
-		if _, err := p.bot.Send(imagePaths); err != nil {
-			log.Println("Ошибка отправки фото:", err)
-		}
-	*/
 
 	// Попробуем взять случайный и удалить
 	img, ok := p.popRandom(&imagePaths)
@@ -124,10 +97,43 @@ func (p *Poster) Posting(ctx context.Context) error {
 
 		extF := strings.ToLower(filepath.Ext(file.Name()))
 		if extF == ".mp4" {
+			outputImage := "frame.jpg"
+
+			// Получим длительность видео (в секундах)
+			cmdDuration := exec.Command("ffprobe", "-v", "error", "-show_entries",
+				"format=duration", "-of", "default=noprint_wrappers=1:nokey=1", file.Name())
+
+			output, err := cmdDuration.Output()
+			if err != nil {
+				fmt.Println("Ошибка при получении длительности:", err)
+
+			}
+
+			var duration float64
+			fmt.Sscanf(string(output), "%f", &duration)
+
+			// Вычислим середину
+			timestamp := duration / 2
+
+			// Извлекаем кадр
+			cmd := exec.Command("ffmpeg", "-ss", fmt.Sprintf("%.2f", timestamp),
+				"-i", file.Name(), "-frames:v", "1", "-q:v", "2", outputImage)
+
+			err = cmd.Run()
+			if err != nil {
+				fmt.Println("Ошибка при извлечении кадра:", err)
+
+			}
+
+			fmt.Println("Кадр успешно сохранён в", outputImage)
+
+			imgBase64, _ := helpers.EncodeImageToBase64([]byte(outputImage), ".jpg")
+
 			video := tgbotapi.NewVideo(p.channelID, tgbotapi.FileReader{
 				Name:   file.Name(),
 				Reader: file,
 			})
+			video.Caption, _ = p.openai.SetCaption("картинка мем", imgBase64)
 
 			// Отправляем
 			if _, err = p.bot.Send(video); err != nil {
@@ -141,7 +147,7 @@ func (p *Poster) Posting(ctx context.Context) error {
 				Name:   file.Name(),
 				Reader: file,
 			})
-			photo.Caption, _ = p.openai.SetCaption("картинка", imgBase64)
+			photo.Caption, _ = p.openai.SetCaption("картинка мем", imgBase64)
 
 			// Отправляем
 			if _, err = p.bot.Send(photo); err != nil {
