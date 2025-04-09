@@ -111,7 +111,7 @@ func (s *OpenAI) SetCaption(prompt string, image string) (string, error) {
 	}
 
 	contentSystem := openai.ChatMessagePart{
-		Text: "Придумай на русском языке прикольное название для картинки мема",
+		Text: "Придумай на русском языке прикольное название для картинки мема и добавь emoji",
 		Type: openai.ChatMessagePartTypeText,
 	}
 
