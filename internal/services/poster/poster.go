@@ -10,7 +10,6 @@ import (
 	"log"
 	"math/rand"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -97,43 +96,12 @@ func (p *Poster) Posting(ctx context.Context) error {
 
 		extF := strings.ToLower(filepath.Ext(file.Name()))
 		if extF == ".mp4" {
-			outputImage := "frame.jpg"
-
-			// Получим длительность видео (в секундах)
-			cmdDuration := exec.Command("ffprobe", "-v", "error", "-show_entries",
-				"format=duration", "-of", "default=noprint_wrappers=1:nokey=1", file.Name())
-
-			output, err := cmdDuration.Output()
-			if err != nil {
-				fmt.Println("Ошибка при получении длительности:", err)
-
-			}
-
-			var duration float64
-			fmt.Sscanf(string(output), "%f", &duration)
-
-			// Вычислим середину
-			timestamp := duration / 2
-
-			// Извлекаем кадр
-			cmd := exec.Command("ffmpeg", "-ss", fmt.Sprintf("%.2f", timestamp),
-				"-i", file.Name(), "-frames:v", "1", "-q:v", "2", outputImage)
-
-			err = cmd.Run()
-			if err != nil {
-				fmt.Println("Ошибка при извлечении кадра:", err)
-
-			}
-
-			fmt.Println("Кадр успешно сохранён в", outputImage)
-
-			imgBase64, _ := helpers.EncodeImageToBase64([]byte(outputImage), ".jpg")
 
 			video := tgbotapi.NewVideo(p.channelID, tgbotapi.FileReader{
 				Name:   file.Name(),
 				Reader: file,
 			})
-			video.Caption, _ = p.openai.SetCaption("картинка мем", imgBase64)
+			video.Caption, _ = p.openai.Summarize("Напиши смешную шутку, коротко")
 
 			// Отправляем
 			if _, err = p.bot.Send(video); err != nil {
