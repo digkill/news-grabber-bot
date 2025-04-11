@@ -111,7 +111,23 @@ func (p *Poster) Posting(ctx context.Context) error {
 				Name:   file.Name(),
 				Reader: file,
 			})
-			video.Caption, _ = p.openai.SetCaption("картинка мем", outputPath)
+
+			// Открываем файл
+			previewFile, _ := os.Open(outputPath)
+			if err != nil {
+				log.Println("Ошибка открытия картинки:", err)
+			}
+			defer previewFile.Close()
+
+			preview, err := io.ReadAll(previewFile)
+			if err != nil {
+				fmt.Println("Ошибка чтения файла:", err)
+			}
+			previewFile.Seek(0, io.SeekStart)
+
+			imgBase64, _ := helpers.EncodeImageToBase64(preview, "jpg")
+
+			video.Caption, _ = p.openai.SetCaption("картинка мем", imgBase64)
 
 			// Отправляем
 			if _, err = p.bot.Send(video); err != nil {
