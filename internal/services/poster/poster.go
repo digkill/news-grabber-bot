@@ -101,7 +101,7 @@ func (p *Poster) Posting(ctx context.Context) error {
 				Name:   file.Name(),
 				Reader: file,
 			})
-			video.Caption, _ = p.openai.Summarize("Напиши смешную шутку, коротко")
+			// video.Caption, _ = p.openai.Summarize("Напиши смешную шутку, коротко")
 
 			// Отправляем
 			if _, err = p.bot.Send(video); err != nil {
