@@ -7,7 +7,6 @@ import (
 	"github.com/digkill/news-grabber-bot/internal/bot"
 	"github.com/digkill/news-grabber-bot/internal/bot/middleware"
 	"github.com/digkill/news-grabber-bot/internal/botkit"
-	"github.com/digkill/news-grabber-bot/internal/fetcher"
 	"github.com/digkill/news-grabber-bot/internal/notifier"
 	poster "github.com/digkill/news-grabber-bot/internal/services/poster"
 	"github.com/digkill/news-grabber-bot/internal/storage"
@@ -45,12 +44,12 @@ func main() {
 	var (
 		articleStorage = storage.NewArticleStorage(db)
 		sourceStorage  = storage.NewSourceStorage(db)
-		fetcher        = fetcher.NewFetcher(
+		/*fetcher        = fetcher.NewFetcher(
 			articleStorage,
 			sourceStorage,
 			config.Get().FetchInterval,
 			config.Get().FilterKeywords,
-		)
+		)*/
 
 		openAI = summary.NewOpenAI(
 			config.Get().OpenAIKey,
@@ -58,7 +57,7 @@ func main() {
 			config.Get().OpenAIPrompt,
 		)
 
-		poster = poster.NewPoster(
+		newPoster = poster.NewPoster(
 			"storage/images",
 			config.Get().NotificationInterval,
 			botAPI,
@@ -66,7 +65,7 @@ func main() {
 			openAI,
 		)
 
-		notifier = notifier.NewNotifier(
+		newNotifier = notifier.NewNotifier(
 			articleStorage,
 			openAI,
 			botAPI,
@@ -127,7 +126,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
-	go func(ctx context.Context) {
+	/*go func(ctx context.Context) {
 		if err := fetcher.Start(ctx); err != nil {
 			if !errors.Is(err, context.Canceled) {
 				log.Printf("[ERROR] failed to run fetcher: %v", err)
@@ -136,32 +135,32 @@ func main() {
 
 			log.Printf("[INFO] fetcher stopped")
 		}
-	}(ctx)
+	}(ctx)*/
 
 	go func(ctx context.Context) {
-		if err := notifier.Start(ctx); err != nil {
+		if err := newNotifier.Start(ctx); err != nil {
 			if !errors.Is(err, context.Canceled) {
-				log.Printf("[ERROR] failed to run notifier: %v", err)
+				log.Printf("[ERROR] failed to run newNotifier: %v", err)
 				return
 			}
 
-			log.Printf("[INFO] notifier stopped")
+			log.Printf("[INFO] newNotifier stopped")
 		}
 	}(ctx)
 
 	go func(ctx context.Context) {
-		if err := poster.Start(ctx); err != nil {
+		if err := newPoster.Start(ctx); err != nil {
 			if !errors.Is(err, context.Canceled) {
-				log.Printf("[ERROR] failed to run poster: %v", err)
+				log.Printf("[ERROR] failed to run newPoster: %v", err)
 				return
 			}
 
-			log.Printf("[INFO] poster stopped")
+			log.Printf("[INFO] newPoster stopped")
 		}
 	}(ctx)
 
 	go func(ctx context.Context) {
-		if err := http.ListenAndServe("0.0.0.0:8080", mux); err != nil {
+		if err := http.ListenAndServe("0.0.0.0:8881", mux); err != nil {
 			if !errors.Is(err, context.Canceled) {
 				log.Printf("[ERROR] failed to run http server: %v", err)
 				return

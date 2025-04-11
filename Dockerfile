@@ -11,6 +11,6 @@ COPY cmd ./cmd
 
 RUN go build -o /app/news-grabber-bot ./cmd/
 
-EXPOSE 8080
+EXPOSE 8881
 
 CMD ["/app/news-grabbe-bot"]
