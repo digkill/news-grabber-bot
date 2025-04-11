@@ -98,7 +98,7 @@ func (p *Poster) Posting(ctx context.Context) error {
 		extF := strings.ToLower(filepath.Ext(file.Name()))
 		if extF == ".mp4" {
 
-			outputPath := "frame.jpg"
+			outputPath := "./internal/storage/images/frame.jpg"
 
 			// Аргументы ffmpeg для взятия первого кадра
 			cmd := exec.Command("ffmpeg", "-i", file.Name(), "-frames:v", "1", outputPath)
