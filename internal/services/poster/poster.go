@@ -10,6 +10,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -97,11 +98,20 @@ func (p *Poster) Posting(ctx context.Context) error {
 		extF := strings.ToLower(filepath.Ext(file.Name()))
 		if extF == ".mp4" {
 
+			outputPath := "frame.jpg"
+
+			// Аргументы ffmpeg для взятия первого кадра
+			cmd := exec.Command("ffmpeg", "-i", file.Name(), "-frames:v", "1", outputPath)
+
+			if err = cmd.Run(); err != nil {
+				fmt.Println("Ошибка:", err)
+			}
+
 			video := tgbotapi.NewVideo(p.channelID, tgbotapi.FileReader{
 				Name:   file.Name(),
 				Reader: file,
 			})
-			// video.Caption, _ = p.openai.Summarize("Напиши смешную шутку, коротко")
+			video.Caption, _ = p.openai.SetCaption("картинка мем", outputPath)
 
 			// Отправляем
 			if _, err = p.bot.Send(video); err != nil {
