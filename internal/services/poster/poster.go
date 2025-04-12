@@ -114,6 +114,10 @@ func (p *Poster) processAndSendImage(imgPath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to read file: %w", err)
 	}
+	_, err = file.Seek(0, io.SeekStart)
+	if err != nil {
+		return fmt.Errorf("failed to rewind file: %w", err)
+	}
 
 	ext := strings.ToLower(filepath.Ext(file.Name()))
 
@@ -124,7 +128,7 @@ func (p *Poster) processAndSendImage(imgPath string) error {
 }
 
 func (p *Poster) sendVideo(file *os.File, data []byte) error {
-	file.Seek(0, io.SeekStart)
+
 	outputPath := filepath.Join(p.imageDir, "frame.jpg")
 
 	cmd := exec.Command("ffmpeg", "-i", file.Name(), "-frames:v", "1", outputPath)
@@ -149,7 +153,7 @@ func (p *Poster) sendVideo(file *os.File, data []byte) error {
 }
 
 func (p *Poster) sendPhoto(file *os.File, data []byte, ext string) error {
-	file.Seek(0, io.SeekStart)
+
 	imgBase64, _ := helpers.EncodeImageToBase64(data, ext)
 	caption, _ := p.openai.SetCaption("картинка мем", imgBase64)
 
