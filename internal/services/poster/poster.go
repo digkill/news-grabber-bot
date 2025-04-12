@@ -142,7 +142,7 @@ func (p *Poster) sendVideo(file *os.File, data []byte) error {
 		return fmt.Errorf("failed to read preview: %w", err)
 	}
 
-	imgBase64, err := helpers.EncodeImageToBase64(previewData, "jpg")
+	imgBase64, err := helpers.EncodeImageToBase64(previewData, ".jpg")
 	if err != nil {
 		return fmt.Errorf("failed to encode preview: %w", err)
 	}
