@@ -1,7 +1,6 @@
 package poster
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"github.com/digkill/news-grabber-bot/internal/helpers"
@@ -11,6 +10,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -117,10 +117,6 @@ func (p *Poster) processAndSendImage(imgPath string) error {
 
 	ext := strings.ToLower(filepath.Ext(file.Name()))
 
-	if len(data) == 0 {
-		return fmt.Errorf("file is empty: %s", imgPath)
-	}
-
 	if ext == ".mp4" {
 		return p.sendVideo(file, data)
 	}
@@ -128,37 +124,40 @@ func (p *Poster) processAndSendImage(imgPath string) error {
 }
 
 func (p *Poster) sendVideo(file *os.File, data []byte) error {
-	reader := bytes.NewReader(data)
+	file.Seek(0, io.SeekStart)
+	outputPath := filepath.Join(p.imageDir, "frame.jpg")
 
-	videoFile := tgbotapi.FileReader{
-		Name:   filepath.Base(file.Name()),
-		Reader: reader,
+	cmd := exec.Command("ffmpeg", "-i", file.Name(), "-frames:v", "1", outputPath)
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("ffmpeg error: %w", err)
 	}
+	defer os.Remove(outputPath)
 
-	msg := tgbotapi.NewVideo(p.channelID, videoFile)
-	msg.Caption = "Лови видосик 🎥"
-	_, err := p.bot.Send(msg)
+	previewData, err := os.ReadFile(outputPath)
 	if err != nil {
-		return fmt.Errorf("failed to send video: %w", err)
+		return fmt.Errorf("failed to read preview: %w", err)
 	}
-	return nil
+
+	imgBase64, _ := helpers.EncodeImageToBase64(previewData, "jpg")
+	caption, _ := p.openai.SetCaption("картинка мем", imgBase64)
+
+	videoMsg := tgbotapi.NewVideo(p.channelID, tgbotapi.FileReader{Name: file.Name(), Reader: file})
+	videoMsg.Caption = caption
+
+	_, err = p.bot.Send(videoMsg)
+	return err
 }
 
 func (p *Poster) sendPhoto(file *os.File, data []byte, ext string) error {
-	reader := bytes.NewReader(data)
+	file.Seek(0, io.SeekStart)
+	imgBase64, _ := helpers.EncodeImageToBase64(data, ext)
+	caption, _ := p.openai.SetCaption("картинка мем", imgBase64)
 
-	photoFile := tgbotapi.FileReader{
-		Name:   filepath.Base(file.Name()),
-		Reader: reader,
-	}
+	photoMsg := tgbotapi.NewPhoto(p.channelID, tgbotapi.FileReader{Name: file.Name(), Reader: file})
+	photoMsg.Caption = caption
 
-	msg := tgbotapi.NewPhoto(p.channelID, photoFile)
-	msg.Caption = "Вот тебе картинка 😽"
-	_, err := p.bot.Send(msg)
-	if err != nil {
-		return fmt.Errorf("failed to send photo: %w", err)
-	}
-	return nil
+	_, err := p.bot.Send(photoMsg)
+	return err
 }
 
 func (p *Poster) isValidImage(path string) error {
