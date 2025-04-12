@@ -121,7 +121,7 @@ func (p *Poster) processAndSendImage(imgPath string) error {
 
 	ext := strings.ToLower(filepath.Ext(file.Name()))
 
-	if ext == ".mp4" {
+	if ext == ".mp4" || ext == ".mov" {
 		return p.sendVideo(file, data)
 	}
 	return p.sendPhoto(file, data, ext)
