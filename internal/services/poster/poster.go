@@ -142,8 +142,14 @@ func (p *Poster) sendVideo(file *os.File, data []byte) error {
 		return fmt.Errorf("failed to read preview: %w", err)
 	}
 
-	imgBase64, _ := helpers.EncodeImageToBase64(previewData, "jpg")
-	caption, _ := p.openai.SetCaption("картинка мем", imgBase64)
+	imgBase64, err := helpers.EncodeImageToBase64(previewData, "jpg")
+	if err != nil {
+		return fmt.Errorf("failed to encode preview: %w", err)
+	}
+	caption, err := p.openai.SetCaption("картинка мем", imgBase64)
+	if err != nil {
+		return fmt.Errorf("failed to set caption: %w", err)
+	}
 
 	videoMsg := tgbotapi.NewVideo(p.channelID, tgbotapi.FileReader{Name: file.Name(), Reader: file})
 	videoMsg.Caption = caption
