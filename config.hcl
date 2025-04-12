@@ -10,3 +10,4 @@ filter_keywords       = ["go", "go lang", "programmer"]
 openai_key            = ""
 openai_prompt         = ""
 openai_model          = "gpt-4o"
+images_directory      = ""

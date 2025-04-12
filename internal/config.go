@@ -20,6 +20,7 @@ type Config struct {
 	OpenAIKey            string        `hcl:"openai_key" env:"OPENAI_KEY"`
 	OpenAIPrompt         string        `hcl:"openai_prompt" env:"OPENAI_PROMPT"`
 	OpenAIModel          string        `hcl:"openai_model" env:"OPENAI_MODEL" default:"gpt-4o"`
+	ImagesDirectory      string        `hcl:"images_directory" env:"IMAGES_DIRECTORY" default:"./internal/storage/images"`
 }
 
 var (
