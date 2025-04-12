@@ -58,7 +58,7 @@ func main() {
 		)
 
 		newPoster = poster.NewPoster(
-			"storage/images",
+			"./internal/storage/images",
 			config.Get().NotificationInterval,
 			botAPI,
 			config.Get().TelegramChannelID,
