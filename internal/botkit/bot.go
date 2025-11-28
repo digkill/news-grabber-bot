@@ -3,10 +3,11 @@ package botkit
 import (
 	"context"
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 	"runtime/debug"
 	"time"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 type Bot struct {
@@ -50,10 +51,6 @@ func (b *Bot) handleUpdate(ctx context.Context, update tgbotapi.Update) {
 			log.Printf("[ERROR] panic recovered: %v\n%s", r, string(debug.Stack()))
 		}
 	}()
-
-	fmt.Println("🤖🤖🤖🤖🤖")
-	fmt.Println("Жопа!")
-	fmt.Println("🤖🤖🤖🤖🤖")
 
 	if (update.Message == nil || !update.Message.IsCommand()) && update.CallbackQuery == nil {
 		return

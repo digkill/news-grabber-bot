@@ -19,7 +19,7 @@ import (
 
 const (
 	captionPrompt = "Generate a short Russian caption for this media (max 15 words). Avoid hashtags and links; optionally add one fitting emoji."
-	postSignature = "Subscribe: https://t.me/noname_mem\nAI helper: https://t.me/AIVideoBestBot"
+	postSignature = "Подпишись!: https://t.me/noname_mem\nAI видеогенератор: https://t.me/AIVideoBestBot"
 )
 
 type Poster struct {
