@@ -16,6 +16,8 @@ import (
 	"time"
 )
 
+const postSignature = "\n\nподпись ии + \n\nПодписаться https://t.me/noname_mem \n\nГенерируй свои AI видео https://t.me/AIVideoBestBot"
+
 type Poster struct {
 	imageDir     string
 	postInterval time.Duration
@@ -152,7 +154,7 @@ func (p *Poster) sendVideo(file *os.File, data []byte) error {
 	}
 
 	videoMsg := tgbotapi.NewVideo(p.channelID, tgbotapi.FileReader{Name: file.Name(), Reader: file})
-	videoMsg.Caption = caption
+	videoMsg.Caption = caption + postSignature
 
 	_, err = p.bot.Send(videoMsg)
 	return err
@@ -164,7 +166,7 @@ func (p *Poster) sendPhoto(file *os.File, data []byte, ext string) error {
 	caption, _ := p.openai.SetCaption("картинка мем", imgBase64)
 
 	photoMsg := tgbotapi.NewPhoto(p.channelID, tgbotapi.FileReader{Name: file.Name(), Reader: file})
-	photoMsg.Caption = caption
+	photoMsg.Caption = caption + postSignature
 
 	_, err := p.bot.Send(photoMsg)
 	return err

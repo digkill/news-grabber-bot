@@ -16,6 +16,8 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
+const postSignature = "\n\nподпись ии + \n\nПодписаться https://t.me/noname_mem \n\nГенерируй свои AI видео https://t.me/AIVideoBestBot"
+
 type ArticleProvider interface {
 	AllNotPosted(ctx context.Context, since time.Time, limit uint64) ([]models.Article, error)
 	MarkAsPosted(ctx context.Context, article models.Article) error
@@ -131,13 +133,14 @@ func cleanupText(text string) string {
 }
 
 func (n *Notifier) sendArticle(article models.Article, summary string) error {
-	const msgFormat = "*%s*%s\n\n%s"
+	const msgFormat = "*%s*%s\n\n%s%s"
 
 	msg := tgbotapi.NewMessage(n.channelID, fmt.Sprintf(
 		msgFormat,
 		markup.EscapeForMarkdown(article.Title),
 		markup.EscapeForMarkdown(summary),
 		markup.EscapeForMarkdown(article.Link),
+		markup.EscapeForMarkdown(postSignature),
 	))
 	msg.ParseMode = "MarkdownV2"
 
