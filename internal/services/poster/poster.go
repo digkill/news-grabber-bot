@@ -3,9 +3,6 @@ package poster
 import (
 	"context"
 	"fmt"
-	"github.com/digkill/news-grabber-bot/internal/helpers"
-	"github.com/digkill/news-grabber-bot/internal/summary"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"io"
 	"log"
 	"math/rand"
@@ -14,9 +11,13 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/digkill/news-grabber-bot/internal/helpers"
+	"github.com/digkill/news-grabber-bot/internal/summary"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-const postSignature = "\n\nподпись ии + \n\nПодписаться https://t.me/noname_mem \n\nГенерируй свои AI видео https://t.me/AIVideoBestBot"
+const postSignature = " \n\nПодписаться https://t.me/noname_mem \n\nГенерируй свои AI видео https://t.me/AIVideoBestBot"
 
 type Poster struct {
 	imageDir     string
