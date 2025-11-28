@@ -96,46 +96,35 @@ func (s *OpenAI) SetCaption(prompt string, image string) (string, error) {
 		return "", fmt.Errorf("openai summarizer is disabled")
 	}
 
-	imgUrl := openai.ChatMessageImageURL{
-		URL: image,
-	}
-
-	contentImg := openai.ChatMessagePart{
-		ImageURL: &imgUrl,
-		Type:     openai.ChatMessagePartTypeImageURL,
-	}
-
-	contentText := openai.ChatMessagePart{
-		Text: prompt,
-		Type: openai.ChatMessagePartTypeText,
-	}
-
-	contentSystem := openai.ChatMessagePart{
-		Text: "Придумай на русском языке прикольное название для картинки мема и добавь emoji",
-		Type: openai.ChatMessagePartTypeText,
-	}
-
-	// Создаём JSON-объект в виде структуры
-	data := []openai.ChatCompletionMessage{
+	messages := []openai.ChatCompletionMessage{
 		{
-			Role:         "user",
-			MultiContent: []openai.ChatMessagePart{contentImg, contentText},
+			Role:    openai.ChatMessageRoleSystem,
+			Content: "You create short, catchy Russian captions (max 15 words) for Telegram posts. No hashtags or links; at most one emoji if it truly fits.",
 		},
 		{
-			Role:         "system",
-			MultiContent: []openai.ChatMessagePart{contentSystem},
+			Role: openai.ChatMessageRoleUser,
+			MultiContent: []openai.ChatMessagePart{
+				{
+					Type:     openai.ChatMessagePartTypeImageURL,
+					ImageURL: &openai.ChatMessageImageURL{URL: image},
+				},
+				{
+					Type: openai.ChatMessagePartTypeText,
+					Text: prompt,
+				},
+			},
 		},
 	}
 
 	request := openai.ChatCompletionRequest{
 		Model:       s.model,
-		Messages:    data,
-		MaxTokens:   1024,
-		Temperature: 1,
+		Messages:    messages,
+		MaxTokens:   128,
+		Temperature: 0.9,
 		TopP:        1,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	resp, err := s.client.CreateChatCompletion(ctx, request)
@@ -147,7 +136,5 @@ func (s *OpenAI) SetCaption(prompt string, image string) (string, error) {
 		return "", errors.New("no choices in openai response")
 	}
 
-	rawSummary := strings.TrimSpace(resp.Choices[0].Message.Content)
-
-	return rawSummary, nil
+	return strings.TrimSpace(resp.Choices[0].Message.Content), nil
 }

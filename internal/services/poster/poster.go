@@ -17,7 +17,10 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-const postSignature = " \n\nПодписаться https://t.me/noname_mem \n\nГенерируй свои AI видео https://t.me/AIVideoBestBot"
+const (
+	captionPrompt = "Generate a short Russian caption for this media (max 15 words). Avoid hashtags and links; optionally add one fitting emoji."
+	postSignature = "Subscribe: https://t.me/noname_mem\nAI helper: https://t.me/AIVideoBestBot"
+)
 
 type Poster struct {
 	imageDir     string
@@ -60,7 +63,7 @@ func (p *Poster) Posting(ctx context.Context) error {
 	}
 
 	if len(images) == 0 {
-		log.Println("No images found 😿")
+		log.Println("No images found in", p.imageDir)
 		return nil
 	}
 
@@ -76,9 +79,9 @@ func (p *Poster) Posting(ctx context.Context) error {
 	}
 
 	if err = os.Remove(imgPath); err != nil {
-		log.Println("Error deleting file:", err)
+		log.Printf("Error deleting file %s: %v", imgPath, err)
 	} else {
-		log.Println("File deleted successfully 🧼✨")
+		log.Printf("File deleted: %s", imgPath)
 	}
 
 	return nil
@@ -117,8 +120,7 @@ func (p *Poster) processAndSendImage(imgPath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to read file: %w", err)
 	}
-	_, err = file.Seek(0, io.SeekStart)
-	if err != nil {
+	if _, err = file.Seek(0, io.SeekStart); err != nil {
 		return fmt.Errorf("failed to rewind file: %w", err)
 	}
 
@@ -131,7 +133,6 @@ func (p *Poster) processAndSendImage(imgPath string) error {
 }
 
 func (p *Poster) sendVideo(file *os.File, data []byte) error {
-
 	outputPath := filepath.Join(p.imageDir, "frame.jpg")
 
 	cmd := exec.Command("ffmpeg", "-i", file.Name(), "-frames:v", "1", outputPath)
@@ -149,27 +150,34 @@ func (p *Poster) sendVideo(file *os.File, data []byte) error {
 	if err != nil {
 		return fmt.Errorf("failed to encode preview: %w", err)
 	}
-	caption, err := p.openai.SetCaption("картинка мем", imgBase64)
+	caption, err := p.openai.SetCaption(captionPrompt, imgBase64)
 	if err != nil {
-		return fmt.Errorf("failed to set caption: %w", err)
+		log.Printf("failed to set caption for video: %v", err)
+		caption = ""
 	}
 
 	videoMsg := tgbotapi.NewVideo(p.channelID, tgbotapi.FileReader{Name: file.Name(), Reader: file})
-	videoMsg.Caption = caption + postSignature
+	videoMsg.Caption = strings.TrimSpace(caption + "\n\n" + postSignature)
 
 	_, err = p.bot.Send(videoMsg)
 	return err
 }
 
 func (p *Poster) sendPhoto(file *os.File, data []byte, ext string) error {
-
-	imgBase64, _ := helpers.EncodeImageToBase64(data, ext)
-	caption, _ := p.openai.SetCaption("картинка мем", imgBase64)
+	imgBase64, err := helpers.EncodeImageToBase64(data, ext)
+	if err != nil {
+		return fmt.Errorf("failed to encode image: %w", err)
+	}
+	caption, err := p.openai.SetCaption(captionPrompt, imgBase64)
+	if err != nil {
+		log.Printf("failed to set caption for photo: %v", err)
+		caption = ""
+	}
 
 	photoMsg := tgbotapi.NewPhoto(p.channelID, tgbotapi.FileReader{Name: file.Name(), Reader: file})
-	photoMsg.Caption = caption + postSignature
+	photoMsg.Caption = strings.TrimSpace(caption + "\n\n" + postSignature)
 
-	_, err := p.bot.Send(photoMsg)
+	_, err = p.bot.Send(photoMsg)
 	return err
 }
 
