@@ -12,6 +12,11 @@ services:
       - "5432:5432"
     volumes:
       - db:/var/lib/postgresql/data/
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d nfb_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   bot:
     build:
@@ -22,7 +27,8 @@ services:
     ports:
       - "8881:8881"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
 volumes:
   db:
