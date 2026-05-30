@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(xargs ls -la)",
-      "Bash(go build *)"
+      "Bash(go build *)",
+      "Bash(go get *)",
+      "Bash(go version *)"
     ]
   }
 }

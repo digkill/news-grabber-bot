@@ -10,11 +10,13 @@ import (
 	"github.com/digkill/news-grabber-bot/internal/notifier"
 	poster "github.com/digkill/news-grabber-bot/internal/services/poster"
 	"github.com/digkill/news-grabber-bot/internal/storage"
+	"github.com/digkill/news-grabber-bot/internal/storage/migrations"
 	"github.com/digkill/news-grabber-bot/internal/summary"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"github.com/pressly/goose/v3"
 	"log"
 	"net/http"
 	"os"
@@ -34,6 +36,18 @@ func main() {
 		log.Printf("[ERROR] failed to connect to db: %v", err)
 		return
 	}
+
+	goose.SetBaseFS(migrations.FS)
+	if err := goose.SetDialect("postgres"); err != nil {
+		log.Printf("[ERROR] failed to set goose dialect: %v", err)
+		return
+	}
+	if err := goose.Up(db.DB, "."); err != nil {
+		log.Printf("[ERROR] failed to run migrations: %v", err)
+		return
+	}
+	log.Printf("[INFO] migrations applied")
+
 	defer func(db *sqlx.DB) {
 		err := db.Close()
 		if err != nil {
