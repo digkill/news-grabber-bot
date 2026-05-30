@@ -5,8 +5,8 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: news_feed_bot
+      POSTGRES_PASSWORD: Nlwg55wd
+      POSTGRES_DB: nfb_db
       PGDATA: /var/lib/postgresql/data/
     ports:
       - "5432:5432"
@@ -17,14 +17,8 @@ services:
     build:
       context: .
     restart: on-failure
-    environment:
-      NFB_DATABASE_DSN: ${NFB_DATABASE_DSN:-postgres://postgres:postgres@db:5432/news_feed_bot?sslmode=disable}
-      NFB_TELEGRAM_BOT_TOKEN: ${NFB_TELEGRAM_BOT_TOKEN}
-      NFB_TELEGRAM_CHANNEL_ID: ${NFB_TELEGRAM_CHANNEL_ID}
-      NFB_FETCH_INTERVAL: ${NFB_FETCH_INTERVAL}
-      NFB_NOTIFICATION_INTERVAL: ${NFB_NOTIFICATION_INTERVAL}
-      NFB_FILTER_KEYWORDS: ${NFB_FILTER_KEYWORDS}
-      NFB_OPENAI_KEY: ${NFB_OPENAI_KEY}
+    volumes:
+      - ./config.local.hcl:/app/config.local.hcl:ro
     ports:
       - "8881:8881"
     depends_on:
