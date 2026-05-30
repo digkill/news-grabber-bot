@@ -13,4 +13,4 @@ RUN go build -o /app/news-grabber-bot ./cmd/
 
 EXPOSE 8881
 
-CMD ["/app/news-grabbe-bot"]
+CMD ["/app/news-grabber-bot"]
