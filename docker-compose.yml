@@ -24,6 +24,7 @@ services:
     restart: on-failure
     volumes:
       - ./config.local.hcl:/app/config.local.hcl:ro
+      - ./internal/storage/images:/app/internal/storage/images
     ports:
       - "8881:8881"
     depends_on:

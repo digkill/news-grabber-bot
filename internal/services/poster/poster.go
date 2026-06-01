@@ -79,10 +79,9 @@ func (p *Poster) Posting(ctx context.Context) error {
 	}
 
 	if err = os.Remove(imgPath); err != nil {
-		log.Printf("Error deleting file %s: %v", imgPath, err)
-	} else {
-		log.Printf("File deleted: %s", imgPath)
+		return fmt.Errorf("failed to delete published file %s: %w", imgPath, err)
 	}
+	log.Printf("File deleted: %s", imgPath)
 
 	return nil
 }
